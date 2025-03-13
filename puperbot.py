@@ -47,6 +47,7 @@ ytdl_format_options = {
     "no_warnings": True,
     "default_search": "auto",
     "source_address": IPV4,  # bind to ipv4 since ipv6 addresses cause issues sometimes
+    "cookiefile": "cookies.txt"
 }
 
 ffmpeg_options = {
@@ -135,6 +136,19 @@ intents.members = True
 intents.message_content = True
 
 bot = commands.Bot(command_prefix="puper ", intents=intents, help_command=None)
+
+lock = asyncio.Lock()
+
+
+# Apply the lock to all commands
+@bot.before_invoke
+async def before_any_command(ctx):
+    await lock.acquire()
+
+
+@bot.after_invoke
+async def after_any_command(ctx):
+    lock.release()
 
 
 @bot.event
@@ -351,6 +365,7 @@ class PlaylistsMenu(discord.ui.View):
 
 @bot.command()
 async def pon(ctx, *, arg):
+
     await ensure_bot_in_vc(ctx)
 
     await addToQueue(ctx, arg, False)
@@ -362,6 +377,7 @@ async def pon(ctx, *, arg):
 
 @bot.command()
 async def ya(ctx, *, arg):
+
     await ensure_bot_in_vc(ctx)
     await addToQueue(ctx, arg, True)
     await ctx.send(f"{arg} is next in the queue.")
@@ -373,6 +389,7 @@ async def ya(ctx, *, arg):
 
 @bot.command()
 async def shuffle(ctx):
+
     if queueList:
         random.shuffle(queueList)
         await ctx.send("Queue shuffled.")
@@ -382,6 +399,7 @@ async def shuffle(ctx):
 
 @bot.command()
 async def skip(ctx):
+
     vc = ctx.voice_client
     if vc and vc.is_playing():
         vc.stop()
@@ -392,6 +410,7 @@ async def skip(ctx):
 
 @bot.command()
 async def plists(ctx, arg=0):
+
     if arg == 0:
         await ctx.send(view=PlaylistsMenu(ctx))
     elif 1 <= arg <= len(playlists):
@@ -406,6 +425,7 @@ async def plists(ctx, arg=0):
 
 @bot.command()
 async def queue(ctx, page: int = 1):
+
     if not queueList:
         await ctx.send("Queue is empty")
         return
@@ -444,6 +464,7 @@ async def queue(ctx, page: int = 1):
 
 @bot.command()
 async def lyrics(ctx, *, args):
+
     await ctx.send(f"Looking for lyrics for {args}...")
 
     async with ctx.typing():
@@ -465,6 +486,7 @@ async def lyrics(ctx, *, args):
 
 @bot.command()
 async def pause(ctx):
+
     vc = ctx.voice_client
     if vc:
         if vc.is_playing():
@@ -478,6 +500,7 @@ async def pause(ctx):
 
 @bot.command()
 async def resume(ctx):
+
     vc = ctx.voice_client
     if vc:
         if vc.is_paused():
@@ -491,6 +514,7 @@ async def resume(ctx):
 
 @bot.command()
 async def stop(ctx):
+
     queueList.clear()
     vc = ctx.voice_client
     if vc and vc.is_playing():
@@ -502,6 +526,7 @@ async def stop(ctx):
 
 @bot.command()
 async def salte(ctx):
+
     member_id = 434017185615052800
     member = ctx.guild.get_member(member_id)
     vc = ctx.voice_client

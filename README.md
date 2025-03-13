@@ -19,7 +19,7 @@ A feature-rich Discord music bot that brings your server's music experience to t
 
 ## 🔧 Technologies Used
 
-- **Discord.py**: Core framework for bot interaction with Discord API
+- **Pycord**: Core framework for bot interaction with Discord API
 - **youtube_dl/FFmpeg**: Media streaming and conversion
 - **Spotipy**: Spotify API integration for playlist and track handling
 - **Genius API**: Lyrics retrieval capabilities
