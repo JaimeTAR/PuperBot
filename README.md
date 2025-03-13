@@ -8,6 +8,10 @@ A feature-rich Discord music bot that brings your server's music experience to t
 
 ![YouTube](https://img.shields.io/badge/YouTube-API-red?style=for-the-badge&logo=youtube&logoColor=white) ![Spotify](https://img.shields.io/badge/Spotify-API-1DB954?style=for-the-badge&logo=spotify&logoColor=white) ![Genius](https://img.shields.io/badge/Genius-API-yellow?style=for-the-badge&logo=genius&logoColor=white)
 
+## Invite it to your server!
+
+Clicking this [link](https://discord.com/oauth2/authorize?client_id=1303152884384272506)
+
 ## ✨ Features
 
 - **Multi-Platform Support**: Stream music from YouTube and Spotify (tracks and playlists)
