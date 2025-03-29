@@ -1,6 +1,6 @@
-py-cord[voice]==2.6.1
-lyricsgenius==3.2.0
-python-dotenv==1.0.1
-spotipy==2.25.0
-youtube_search==2.1.2
-yt_dlp==2025.2.19
+py-cord[voice]
+lyricsgenius
+python-dotenv
+spotipy
+youtube_search
+yt_dlp
