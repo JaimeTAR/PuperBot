@@ -56,13 +56,11 @@ ffmpeg_options = {
 
 ytdl = youtube_dl.YoutubeDL(ytdl_format_options)
 
-
 class YTDLSource(discord.PCMVolumeTransformer):
     def __init__(self, source, *, data, volume=0.5):
         super().__init__(source, volume)
 
         self.data = data
-
         self.title = data.get("title")
         self.url = data.get("url")
 
@@ -70,42 +68,52 @@ class YTDLSource(discord.PCMVolumeTransformer):
     async def from_url(cls, url, *, loop=None):
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(
-            None, lambda: ytdl.extract_info(url, download=True)
+            None, lambda: ytdl.extract_info(url, download=False)  # Set download=False
         )
 
         if "entries" in data:
-            # take first item from a playlist
             data = data["entries"][0]
 
-        filename = ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        # Get the direct audio stream URL
+        audio_url = data["url"]
+
+        # Add before_options to prevent cutting
+        ffmpeg_options = {
+            "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+            "options": "-vn"
+        }
+
+        return cls(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), data=data)
 
     @classmethod
     async def from_query(cls, query, *, loop=None):
         query = str(query)
-
-        query = query
-
         results = search(query, max_results=1).to_json()
-
         resultsJson = json.loads(results)
-
         selected_result = resultsJson["videos"][0]
 
-        url = "youtube.com/watch?v=" + selected_result["id"]
+        url = "https://www.youtube.com/watch?v=" + selected_result["id"]
         print(url)
         print("-----------------------------------")
 
         loop = loop or asyncio.get_event_loop()
         data = await loop.run_in_executor(
-            None, lambda: ytdl.extract_info(url, download=True)
+            None, lambda: ytdl.extract_info(url, download=False)  # Set download=False
         )
 
         if "entries" in data:
             data = data["entries"][0]
 
-        filename = ytdl.prepare_filename(data)
-        return cls(discord.FFmpegPCMAudio(filename, **ffmpeg_options), data=data)
+        # Get the direct audio stream URL
+        audio_url = data["url"]
+
+        # Add before_options to prevent cutting
+        ffmpeg_options = {
+            "before_options": "-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5",
+            "options": "-vn"
+        }
+
+        return cls(discord.FFmpegPCMAudio(audio_url, **ffmpeg_options), data=data)
 
 
 #####################################################################################
@@ -204,6 +212,9 @@ async def isSpotifyPlaylist(url):
     url = str(url)
     return await isSpotifyUrl(url) and url.find("playlist") != -1
 
+async def isSpotifyAlbum(url):
+    url = str(url)
+    return await isSpotifyUrl(url) and url.find("album") != -1
 
 async def isSpotifyTrack(url):
     url = str(url)
@@ -232,6 +243,21 @@ async def getSpotifyPlaylistQueries(url):
     random.shuffle(queries)
     return queries
 
+async def getSpotifyAlbumQueries(url):
+    url = str(url)
+    album_ID = url.split("/")[-1].split("?")[0]
+    results = sp.album_tracks(album_id=album_ID)
+    tracks = results["items"]
+    queries = []
+
+    for item in tracks:
+        track_name = item.get("name", "Unknown Track")
+        first_artist = item.get("artists", [{}])[0].get(
+            "name", "Unknown Artist"
+        )
+        query = f"{track_name} - {first_artist}"
+        queries.append(query)
+    return queries
 
 async def getSpotifyTrackQuery(url):
     url = str(url)
@@ -252,6 +278,8 @@ async def addToQueue(ctx, arg, urgent):
             queries = await getSpotifyPlaylistQueries(arg)
         elif await isSpotifyTrack(arg):
             queries.append(await getSpotifyTrackQuery(arg))
+        elif await isSpotifyAlbum(arg):
+            queries = await getSpotifyAlbumQueries(arg)
         else:
             queries.append(arg)
     for query in queries:
@@ -539,8 +567,9 @@ async def salte(ctx):
                 await skip(ctx)
 
             await asyncio.sleep(4)
-
-            await member.timeout(timedelta(seconds=10), reason="A pensar")
+            
+            until_time = discord.utils.utcnow() + timedelta(seconds=10)
+            await member.timeout(until_time, reason="A pensar")
 
             await ctx.send(f"Gracias Dios")
 
